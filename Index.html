@@ -12,12 +12,26 @@
             margin: 20px;
         }
         .container {
-            max-width: 600px;
+            display: flex;
+            max-width: 800px;
             margin: 0 auto;
             background: #fff;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .logo-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .logo {
+            max-width: 200px;
+        }
+        .form-container {
+            flex: 2;
+            padding-left: 20px;
         }
         h1 {
             text-align: center;
@@ -51,51 +65,83 @@
         button:hover {
             background-color: #0056b3;
         }
-        .logo {
-            display: block;
-            margin: 0 auto 20px;
-            max-width: 150px;
+        .comment-group {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .comment-group input {
+            flex: 1;
+            margin-left: 10px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <img src="logo.png" alt="Logo" class="logo">
-        <h1>Gerador de Relatório Técnico</h1>
-        <form id="reportForm">
-            <div class="form-group">
-                <label for="cliente">Cliente:</label>
-                <input type="text" id="cliente" class="form-control" required>
-            </div>
-            <div class="form-group">
-                <label for="equipamento">Equipamento:</label>
-                <input type="text" id="equipamento" class="form-control" required>
-            </div>
-            <div class="form-group">
-                <label for="tag">Tag:</label>
-                <input type="text" id="tag" class="form-control" required>
-            </div>
-            <div class="form-group">
-                <label for="horimetro">Horímetro:</label>
-                <input type="text" id="horimetro" class="form-control" required>
-            </div>
-            <div class="form-group">
-                <label for="data">Data:</label>
-                <input type="date" id="data" class="form-control" required>
-            </div>
-            <div class="form-group">
-                <label for="problemas">Descrição dos Problemas:</label>
-                <textarea id="problemas" rows="4" class="form-control" required></textarea>
-            </div>
-            <div class="form-group">
-                <label for="imagens">Adicionar Fotos:</label>
-                <input type="file" id="imagens" class="form-control" multiple accept="image/*">
-            </div>
-            <button type="button" onclick="gerarPDF()">Gerar PDF</button>
-        </form>
+        <div class="logo-container">
+            <img src="logo.png" alt="Logo" class="logo">
+        </div>
+        <div class="form-container">
+            <h1>Gerador de Relatório Técnico</h1>
+            <form id="reportForm">
+                <div class="form-group">
+                    <label for="cliente">Cliente:</label>
+                    <input type="text" id="cliente" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="equipamento">Equipamento:</label>
+                    <input type="text" id="equipamento" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="tag">Tag:</label>
+                    <input type="text" id="tag" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="horimetro">Horímetro:</label>
+                    <input type="text" id="horimetro" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="data">Data:</label>
+                    <input type="date" id="data" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="problemas">Descrição dos Problemas:</label>
+                    <textarea id="problemas" rows="4" class="form-control" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="imagens">Adicionar Fotos:</label>
+                    <input type="file" id="imagens" class="form-control" multiple accept="image/*">
+                </div>
+                <div id="comentarios"></div>
+                <button type="button" onclick="gerarPDF()">Gerar PDF</button>
+            </form>
+        </div>
     </div>
 
     <script>
+        document.getElementById('imagens').addEventListener('change', function(event) {
+            const comentariosDiv = document.getElementById('comentarios');
+            comentariosDiv.innerHTML = ''; // Limpar comentários antigos
+
+            Array.from(event.target.files).forEach((file, index) => {
+                const commentGroup = document.createElement('div');
+                commentGroup.classList.add('comment-group');
+
+                const label = document.createElement('label');
+                label.textContent = `Comentário para ${file.name}:`;
+                
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.placeholder = 'Escreva seu comentário';
+                input.classList.add('form-control');
+                input.dataset.fileIndex = index;
+
+                commentGroup.appendChild(label);
+                commentGroup.appendChild(input);
+                comentariosDiv.appendChild(commentGroup);
+            });
+        });
+
         async function gerarPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
@@ -108,6 +154,7 @@
             const data = document.getElementById('data').value;
             const problemas = document.getElementById('problemas').value;
             const imagens = document.getElementById('imagens').files;
+            const comentarios = Array.from(document.querySelectorAll('.comment-group input')).map(input => input.value);
 
             // Configurando o conteúdo do PDF
             doc.setFontSize(12);
@@ -120,7 +167,7 @@
             doc.text("Descrição dos Problemas:", 10, 70);
             doc.text(problemas, 10, 80);
 
-            // Adicionando imagens
+            // Adicionando imagens e comentários
             let yPosition = 100;
             for (let i = 0; i < imagens.length; i++) {
                 const image = imagens[i];
@@ -129,7 +176,8 @@
                 reader.onload = function(e) {
                     const imgData = e.target.result;
                     doc.addImage(imgData, 'JPEG', 10, yPosition, 100, 75);
-                    yPosition += 85;
+                    doc.text(`Comentário: ${comentarios[i]}`, 10, yPosition + 80);
+                    yPosition += 95;
                     if (i === imagens.length - 1) {
                         doc.save("Relatorio_Tecnico.pdf");
                     }
