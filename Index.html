@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Relatório Técnico</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            font-weight: bold;
+            color: #555;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            display: block;
+            width: 100%;
+            background-color: #007bff;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .logo {
+            display: block;
+            margin: 0 auto 20px;
+            max-width: 150px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="logo.png" alt="Logo" class="logo">
+        <h1>Gerador de Relatório Técnico</h1>
+        <form id="reportForm">
+            <div class="form-group">
+                <label for="cliente">Cliente:</label>
+                <input type="text" id="cliente" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="equipamento">Equipamento:</label>
+                <input type="text" id="equipamento" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="tag">Tag:</label>
+                <input type="text" id="tag" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="horimetro">Horímetro:</label>
+                <input type="text" id="horimetro" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="data">Data:</label>
+                <input type="date" id="data" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="problemas">Descrição dos Problemas:</label>
+                <textarea id="problemas" rows="4" class="form-control" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="imagens">Adicionar Fotos:</label>
+                <input type="file" id="imagens" class="form-control" multiple accept="image/*">
+            </div>
+            <button type="button" onclick="gerarPDF()">Gerar PDF</button>
+        </form>
+    </div>
+
+    <script>
+        async function gerarPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Capturando os dados do formulário
+            const cliente = document.getElementById('cliente').value;
+            const equipamento = document.getElementById('equipamento').value;
+            const tag = document.getElementById('tag').value;
+            const horimetro = document.getElementById('horimetro').value;
+            const data = document.getElementById('data').value;
+            const problemas = document.getElementById('problemas').value;
+            const imagens = document.getElementById('imagens').files;
+
+            // Configurando o conteúdo do PDF
+            doc.setFontSize(12);
+            doc.text("Relatório Técnico", 10, 10);
+            doc.text(`Cliente: ${cliente}`, 10, 20);
+            doc.text(`Equipamento: ${equipamento}`, 10, 30);
+            doc.text(`Tag: ${tag}`, 10, 40);
+            doc.text(`Horímetro: ${horimetro}`, 10, 50);
+            doc.text(`Data: ${data}`, 10, 60);
+            doc.text("Descrição dos Problemas:", 10, 70);
+            doc.text(problemas, 10, 80);
+
+            // Adicionando imagens
+            let yPosition = 100;
+            for (let i = 0; i < imagens.length; i++) {
+                const image = imagens[i];
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    const imgData = e.target.result;
+                    doc.addImage(imgData, 'JPEG', 10, yPosition, 100, 75);
+                    yPosition += 85;
+                    if (i === imagens.length - 1) {
+                        doc.save("Relatorio_Tecnico.pdf");
+                    }
+                };
+
+                reader.readAsDataURL(image);
+            }
+
+            if (imagens.length === 0) {
+                doc.save("Relatorio_Tecnico.pdf");
+            }
+        }
+    </script>
+</body>
+</html>
